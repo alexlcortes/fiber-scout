@@ -1,0 +1,19 @@
+# Local environment and secrets
+.env
+!.env.example
+.venv/
+
+# Python-generated files
+__pycache__/
+*.py[cod]
+
+# macOS metadata
+.DS_Store
+
+# Local input, output, and run logs
+data/input/*
+!data/input/.gitkeep
+data/output/*
+!data/output/.gitkeep
+logs/*
+!logs/.gitkeep
