@@ -95,6 +95,26 @@ Complete one stage at a time, then stop and wait before beginning the next.
 - `.env.example` documents how to start a local `.env` file without storing
   credentials in Git. Keep actual secrets in `.env`.
 
+### Sunbiz corporate data lookup
+
+The optional Sunbiz lookup searches locally downloaded corporate data files;
+it does not require an API key or make requests to the search website. Obtain
+the quarterly corporate data archive from the Florida Division of
+Corporations' [data downloads page](https://dos.fl.gov/sunbiz/other-services/data-downloads/quarterly-data/),
+then pass the ZIP archive or extracted fixed-width `.txt` files to
+`fiber_scout.sunbiz.search_sunbiz`. Quarterly corporate archives are very
+large. The parser streams their text records and follows the official
+[corporate file definitions](https://dos.sunbiz.org/data-definitions/cor.html).
+
+### Hunter contact enrichment
+
+Set `HUNTER_API_KEY` in `.env` and call
+`fiber_scout.hunter.search_domain_contacts` with a business domain. This tool
+uses Hunter's [Domain Search API](https://hunter.io/api-documentation/v2#domain-search),
+which may consume provider credits. It returns provider confidence scores and
+source URLs without treating the scores as verified facts. Automated tests
+mock the API response and do not make billable requests.
+
 ## Hard Rules
 
 1. **Do not invent data.** If a fact is not found in a source, record
