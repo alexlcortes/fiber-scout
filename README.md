@@ -95,25 +95,80 @@ Complete one stage at a time, then stop and wait before beginning the next.
 - `.env.example` documents how to start a local `.env` file without storing
   credentials in Git. Keep actual secrets in `.env`.
 
-### Sunbiz corporate data lookup
+## Using what's implemented
 
-The optional Sunbiz lookup searches locally downloaded corporate data files;
-it does not require an API key or make requests to the search website. Obtain
-the quarterly corporate data archive from the Florida Division of
-Corporations' [data downloads page](https://dos.fl.gov/sunbiz/other-services/data-downloads/quarterly-data/),
-then pass the ZIP archive or extracted fixed-width `.txt` files to
-`fiber_scout.sunbiz.search_sunbiz`. Quarterly corporate archives are very
-large. The parser streams their text records and follows the official
-[corporate file definitions](https://dos.sunbiz.org/data-definitions/cor.html).
+The current data and research tools are Python functions, not a complete
+prospecting agent yet. Run commands from the repository root. To run the
+offline test suite:
+
+```bash
+PYTHONPATH=src ./.venv/bin/python -m unittest discover -s tests -v
+```
+
+### CSV data layer
+
+`fiber_scout.data.read_csv(path)` reads CSV rows,
+`select_pending_rows(rows, limit=20)` returns the zero-based indexes of rows
+not marked `done`, and `write_results(csv_path, updates, output_path=...)`
+writes updates only to agent-owned columns. Each update must include a
+non-empty `status`. Supplying `output_path` writes to a separate file and
+leaves the source file unchanged; without it, the source CSV is updated.
+
+### Places nearby search
+
+`fiber_scout.places.search_nearby(latitude, longitude, radius_meters=...)`
+searches for candidate places near coordinates. Set `GOOGLE_MAPS_API_KEY` in
+the environment before calling it. If you do not already have a `.env` file,
+create one from `.env.example` with `cp .env.example .env`, then add your key.
+For a local `.env` file in macOS/Linux, load its values into the current shell
+with:
+
+```bash
+set -a
+source .env
+set +a
+```
+
+Places requests use Google Maps Platform and may be billable. A result is a
+discovery lead, not independently verified proof of a business at an address.
+
+### Website fetch and text extraction
+
+`fiber_scout.website.fetch_website(url)` retrieves a public HTML page and
+returns its title, readable text, final URL, and whether the response was
+truncated. `extract_html_text(html)` extracts title and visible text from an
+HTML string without making a network request. The tool accepts standard
+HTTP(S) ports only and limits response size and request time.
+
+### Optional Sunbiz corporate data lookup
+
+`fiber_scout.sunbiz.search_sunbiz(name, data_files, limit=20)` searches
+locally downloaded corporate data files. It does not need an API key or make
+requests to the search website. Obtain the quarterly corporate data archive
+from the Florida Division of Corporations'
+[data downloads page](https://dos.fl.gov/sunbiz/other-services/data-downloads/quarterly-data/),
+then pass the ZIP archive or extracted fixed-width `.txt` files. Quarterly
+corporate archives are very large; the parser streams their text records and
+follows the official [corporate file definitions](https://dos.sunbiz.org/data-definitions/cor.html).
+The data may not reflect the latest filing information, and a corporate
+record does not establish that a business occupies a researched property.
 
 ### Hunter contact enrichment
 
 Set `HUNTER_API_KEY` in `.env` and call
-`fiber_scout.hunter.search_domain_contacts` with a business domain. This tool
-uses Hunter's [Domain Search API](https://hunter.io/api-documentation/v2#domain-search),
-which may consume provider credits. It returns provider confidence scores and
-source URLs without treating the scores as verified facts. Automated tests
-mock the API response and do not make billable requests.
+`fiber_scout.hunter.search_domain_contacts(domain)` with a business domain.
+This uses Hunter's [Domain Search API](https://hunter.io/api-documentation/v2#domain-search),
+which may consume provider credits. Results include Hunter's confidence score
+and available source URLs; they are provider-supplied leads, not guaranteed
+current or verified contacts.
+
+### Current implementation boundary
+
+The CSV functions and four research tools are implemented, but they are not
+yet connected to an agent loop or an end-to-end command-line run. The later
+development stages will add the agent, scoring, evaluation, and improvements.
+The tests use sample data and mocked provider responses; they do not make live
+Places or Hunter API requests.
 
 ## Hard Rules
 
